@@ -36,9 +36,12 @@ def get_ai_response(prompt, weather_context):
         )
 
         response.raise_for_status()  # Raise an error for bad status codes (e.g., 400 or 500)
-        
+
         # Parse the JSON response
         response_json = response.json()
+
+        # Print the full response for debugging
+        print("Full Response:", json.dumps(response_json, indent=4))  # This line will print the full response
 
         # Check if the response contains valid data
         if "choices" in response_json and len(response_json["choices"]) > 0:
@@ -57,6 +60,7 @@ def get_ai_response(prompt, weather_context):
         return f"An error occurred during the API request: {e}"
     except (KeyError, json.JSONDecodeError) as e:
         return f"An error occurred while parsing the API response: {e}"
+
 
 def display_chat_ui():
     st.subheader("Chat with AI")
