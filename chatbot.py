@@ -3,49 +3,53 @@ import json
 import streamlit as st
 
 # Fetch the API key securely from Streamlit secrets
-OPENROUTER_API_KEY = st.secrets["OPENROUTER_API_KEY"]  # Add your key in Streamlit's secrets.toml
+OPENROUTER_API_KEY = st.secrets["OPENROUTER_API_KEY"]  # Replace with your actual key in secrets.toml
 
 def get_ai_response(prompt, weather_context):
     try:
-        # Make API request
+        # Prepare the request payload
+        data_payload = {
+            "model": "google/gemini-2.0-flash-exp:free",  # Make sure to use the correct model
+            "messages": [
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": f"{weather_context} {prompt}"  # Add the weather context to the prompt
+                        }
+                    ]
+                }
+            ]
+        }
+
+        # Make the POST request to the API
         response = requests.post(
             url="https://openrouter.ai/api/v1/chat/completions",
             headers={
                 "Authorization": f"Bearer {OPENROUTER_API_KEY}",
                 "Content-Type": "application/json",
+                "HTTP-Referer": "<YOUR_SITE_URL>",  # Optional, can be left blank or replaced with your site URL
+                "X-Title": "<YOUR_SITE_NAME>",  # Optional, can be left blank or replaced with your site title
             },
-            data=json.dumps({
-                "model": "google/gemini-2.0-flash-exp:free",
-                "messages": [
-                    {
-                        "role": "user",
-                        "content": [
-                            {
-                                "type": "text",
-                                "text": f"{weather_context} {prompt}"
-                            },
-                        ],
-                    },
-                ],
-            }),
+            data=json.dumps(data_payload)
         )
+
+        response.raise_for_status()  # Raise an error for bad status codes (e.g., 400 or 500)
         
-        response.raise_for_status()  # Check for errors in response
-        
+        # Parse the JSON response
         response_json = response.json()
-        
-        # Extract content from the response
-        if "choices" in response_json and len(response_json["choices"]) > 0 and \
-                "message" in response_json["choices"][0] and "content" in response_json["choices"][0]["message"]:
 
-            content = response_json["choices"][0]["message"]["content"]
+        # Check if the response contains valid data
+        if "choices" in response_json and len(response_json["choices"]) > 0:
+            content = response_json["choices"][0].get("message", {}).get("content", None)
 
-            if isinstance(content, list) and len(content) > 0 and isinstance(content[0], dict) and "text" in content[0]:
-                return content[0]["text"]
-            elif isinstance(content, str):
-                return content
+            if content:
+                # Return the AI-generated response
+                return content if isinstance(content, str) else content[0].get("text", "Unknown response format")
             else:
                 return "AI response format unexpected."
+
         else:
             return "AI response structure incomplete."
 
@@ -56,7 +60,7 @@ def get_ai_response(prompt, weather_context):
 
 def display_chat_ui():
     st.subheader("Chat with AI")
-    
+
     if 'messages' not in st.session_state:
         st.session_state.messages = []
 
