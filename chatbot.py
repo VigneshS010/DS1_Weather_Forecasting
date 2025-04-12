@@ -1,6 +1,6 @@
-# chatbot.py
 import requests
 import json
+import streamlit as st  # Add this line
 
 OPENROUTER_API_KEY = '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'
 
