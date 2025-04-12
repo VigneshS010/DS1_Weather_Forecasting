@@ -1,11 +1,13 @@
 import requests
 import json
-import streamlit as st  # Add this line
+import streamlit as st
 
-OPENROUTER_API_KEY = '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'
+# Fetch the API key securely from Streamlit secrets
+OPENROUTER_API_KEY = st.secrets["OPENROUTER_API_KEY"]  # Add your key in Streamlit's secrets.toml
 
 def get_ai_response(prompt, weather_context):
     try:
+        # Make API request
         response = requests.post(
             url="https://openrouter.ai/api/v1/chat/completions",
             headers={
@@ -13,7 +15,7 @@ def get_ai_response(prompt, weather_context):
                 "Content-Type": "application/json",
             },
             data=json.dumps({
-                "model": "google/gemini-2.0-flash-thinking-exp:free",
+                "model": "google/gemini-2.0-flash-exp:free",
                 "messages": [
                     {
                         "role": "user",
@@ -27,9 +29,12 @@ def get_ai_response(prompt, weather_context):
                 ],
             }),
         )
-        response.raise_for_status()
+        
+        response.raise_for_status()  # Check for errors in response
+        
         response_json = response.json()
-
+        
+        # Extract content from the response
         if "choices" in response_json and len(response_json["choices"]) > 0 and \
                 "message" in response_json["choices"][0] and "content" in response_json["choices"][0]["message"]:
 
@@ -51,6 +56,7 @@ def get_ai_response(prompt, weather_context):
 
 def display_chat_ui():
     st.subheader("Chat with AI")
+    
     if 'messages' not in st.session_state:
         st.session_state.messages = []
 
@@ -60,6 +66,7 @@ def display_chat_ui():
 
     prompt = st.chat_input("Ask about the weather...")
 
+    # Default prompts for the user
     default_prompts = [
         "Can I go out today?",
         "What should I wear today?",
