@@ -1,4 +1,3 @@
-# app.py
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -7,6 +6,7 @@ import time
 import numpy as np
 from pytz import timezone
 import chatbot  # Import the chatbot functions
+import re  # Import the regular expression module
 
 # Placeholder for run_forecast
 @st.cache_data
@@ -116,11 +116,10 @@ if not current_hour_weather.empty and not current_hour_pred.empty:
         </div>
     """, unsafe_allow_html=True)
 
-
-# Center the "Chat with AI" button
-    col_button = st.columns([1, 1, 1])[1]  # Create 3 columns, use the center one
+    # Center the "Chat with AI" button
+    col_button = st.columns([1, 1, 1])[1]
     with col_button:
-        if st.button("Chat with AI", key="chat_button"): #added key
+        if st.button("Chat with AI", key="chat_button"):
             st.session_state.show_chat = True
 
         if 'show_chat' not in st.session_state:
@@ -130,11 +129,11 @@ if not current_hour_weather.empty and not current_hour_pred.empty:
     st.markdown(
         """
         <style>
-        #chat_button { /*target the specific button using its key*/
-            padding: 15px 30px;  /* Increase padding for size */
-            font-size: 18px;      /* Increase font size */
-            background-color: green; /*change button color to green*/
-            color: white; /*change the font color to white*/
+        #chat_button {
+            padding: 15px 30px;
+            font-size: 18px;
+            background-color: green;
+            color: white;
         }
         </style>
         """,
