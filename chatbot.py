@@ -1,59 +1,65 @@
+# chatbot.py
 import requests
 import json
-import streamlit as st
 
-# Set your weather context here or dynamically update from external API
-WEATHER_CONTEXT = "The weather today is sunny with a high of 75°F (24°C) and a low of 55°F (13°C)."
+OPENROUTER_API_KEY = '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'
 
-# --- Function to call OpenRouter API ---
 def get_ai_response(prompt, weather_context):
     try:
-        headers = {
-            "Authorization": f"Bearer {st.secrets['OPENROUTER_API_KEY']}",  # Or replace with your key directly for testing
-            "Content-Type": "application/json"
-        }
+        response = requests.post(
+            url="https://openrouter.ai/api/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+                "Content-Type": "application/json",
+            },
+            data=json.dumps({
+                "model": "google/gemini-2.0-flash-thinking-exp:free",
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": f"{weather_context} {prompt}"
+                            },
+                        ],
+                    },
+                ],
+            }),
+        )
+        response.raise_for_status()
+        response_json = response.json()
 
-        payload = {
-            "model": "openchat/openchat-7b",  # You can replace with any supported model
-            "messages": [
-                {
-                    "role": "user",
-                    "content": f"{weather_context} {prompt}"
-                }
-            ],
-            "temperature": 0.7
-        }
+        if "choices" in response_json and len(response_json["choices"]) > 0 and \
+                "message" in response_json["choices"][0] and "content" in response_json["choices"][0]["message"]:
 
-        response = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload)
-        data = response.json()
+            content = response_json["choices"][0]["message"]["content"]
 
-        # 🔍 Debug (optional)
-        # st.write("API Response:", data)
-
-        if "choices" in data and len(data["choices"]) > 0:
-            return data["choices"][0]["message"]["content"]
+            if isinstance(content, list) and len(content) > 0 and isinstance(content[0], dict) and "text" in content[0]:
+                return content[0]["text"]
+            elif isinstance(content, str):
+                return content
+            else:
+                return "AI response format unexpected."
         else:
-            return "AI response not available. Please try again."
+            return "AI response structure incomplete."
 
     except requests.exceptions.RequestException as e:
-        return f"❌ API request error: {e}"
+        return f"An error occurred during the API request: {e}"
     except (KeyError, json.JSONDecodeError) as e:
-        return f"❌ Error parsing API response: {e}"
+        return f"An error occurred while parsing the API response: {e}"
 
-
-# --- Streamlit UI Function ---
 def display_chat_ui():
-    st.title("☀️ Weather AI Chatbot")
-
+    st.subheader("Chat with AI")
     if 'messages' not in st.session_state:
         st.session_state.messages = []
 
-    # Display previous messages
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-    # Default prompts
+    prompt = st.chat_input("Ask about the weather...")
+
     default_prompts = [
         "Can I go out today?",
         "What should I wear today?",
@@ -62,29 +68,8 @@ def display_chat_ui():
         "What is the current temperature?",
     ]
 
-    # Layout with prompt buttons
-    cols = st.columns(len(default_prompts))
-    for i, default_prompt in enumerate(default_prompts):
-        if cols[i].button(default_prompt):
-            st.session_state.selected_prompt = default_prompt
+    for default_prompt in default_prompts:
+        if st.button(default_prompt):
+            prompt = default_prompt
 
-    # User input or button click
-    prompt = st.chat_input("Ask about the weather...")
-    if 'selected_prompt' in st.session_state:
-        prompt = st.session_state.pop('selected_prompt')
-
-    if prompt:
-        # Display user message
-        st.chat_message("user").markdown(prompt)
-        st.session_state.messages.append({"role": "user", "content": prompt})
-
-        # Get AI reply
-        ai_reply = get_ai_response(prompt, WEATHER_CONTEXT)
-
-        # Display AI reply
-        st.chat_message("assistant").markdown(ai_reply)
-        st.session_state.messages.append({"role": "assistant", "content": ai_reply})
-
-
-# --- Run the chatbot UI ---
-display_chat_ui()
+    return prompt
