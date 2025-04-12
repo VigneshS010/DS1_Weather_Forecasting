@@ -9,7 +9,7 @@ def get_ai_response(prompt, weather_context):
     try:
         # Prepare the request payload
         data_payload = {
-            "model": "google/gemini-2.0-flash-exp:free",  # Make sure to use the correct model
+            "model": "google/gemini-2.0-flash-thinking-exp:free",  # Make sure to use the correct model
             "messages": [
                 {
                     "role": "user",
@@ -24,8 +24,8 @@ def get_ai_response(prompt, weather_context):
             headers={
                 "Authorization": f"Bearer {OPENROUTER_API_KEY}",
                 "Content-Type": "application/json",
-                "HTTP-Referer": "<YOUR_SITE_URL>",  # Optional, can be left blank or replaced with your site URL
-                "X-Title": "<YOUR_SITE_NAME>",  # Optional, can be left blank or replaced with your site title
+                # "HTTP-Referer": "<YOUR_SITE_URL>",  # Optional, can be left blank or replaced with your site URL
+                # "X-Title": "<YOUR_SITE_NAME>",  # Optional, can be left blank or replaced with your site title
             },
             data=json.dumps(data_payload)
         )
@@ -99,7 +99,7 @@ def display_chat_ui():
         # Add AI response to session state
         st.session_state.messages.append({"role": "assistant", "content": response})
 
-        # Scroll to the bottom after new messages
+        # Display AI response in the chat window
         st.chat_message("assistant").markdown(response)
 
     return prompt
