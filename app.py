@@ -1,3 +1,4 @@
+# app.py
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -256,10 +257,6 @@ with col2:
     fig_wind = px.line(day_weather, x='time', y='windspeed_10m', title="Wind Speed (km/h)", markers=True,
                         line_shape='spline', color_discrete_sequence=['#8A2BE2'])
     st.plotly_chart(fig_wind, use_container_width=True)
-import re  # Import the regular expression module
-
-
-import re  # Import the regular expression module
 
 # Sidebar for news
 st.sidebar.subheader("Recent Weather/Climate News (This take some time to load 😊)")
