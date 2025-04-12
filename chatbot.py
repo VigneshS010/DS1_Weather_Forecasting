@@ -28,20 +28,17 @@ def get_ai_response(prompt, weather_context):
         response.raise_for_status()
         response_json = response.json()
 
-        # Debug log (optional)
-        # st.write("API Raw Response:", response_json)
+        # Optional: print raw response
+        # st.write("Raw API Response:", response_json)
 
-        if "choices" in response_json and len(response_json["choices"]) > 0:
-            message = response_json["choices"][0]["message"]
-            content = message.get("content")
-
-            if isinstance(content, list) and len(content) > 0:
-                text = content[0].get("text", "")
-                return text
-            elif isinstance(content, str):
-                return content
-            else:
-                return "AI response format unexpected."
+        if (
+            "choices" in response_json and
+            len(response_json["choices"]) > 0 and
+            "message" in response_json["choices"][0] and
+            "content" in response_json["choices"][0]["message"]
+        ):
+            content = response_json["choices"][0]["message"]["content"]
+            return content  # always a string here
         else:
             return "AI response structure incomplete."
 
@@ -49,6 +46,7 @@ def get_ai_response(prompt, weather_context):
         return f"API request error: {e}"
     except (KeyError, json.JSONDecodeError) as e:
         return f"API response parsing error: {e}"
+
 
 def display_chat_ui():
     st.subheader("🌤️ Chat with the AI Weather Assistant")
